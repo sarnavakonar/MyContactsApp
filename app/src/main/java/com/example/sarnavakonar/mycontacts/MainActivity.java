@@ -40,12 +40,6 @@ public class MainActivity extends AppCompatActivity {
         recyclerView = findViewById(R.id.rv);
         contacts = new ArrayList<>();
 
-        progressDialog = new ProgressDialog(this);
-        progressDialog.setMessage("Syncing your contacts...");
-        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-        progressDialog.setCancelable(false);
-        progressDialog.show();
-
         contactsAdapter = new ContactsAdapter(contacts, new ContactsAdapter.mListener() {
             @Override
             public void next(View view, Contacts contact) {
@@ -58,12 +52,27 @@ public class MainActivity extends AppCompatActivity {
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(contactsAdapter);
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Syncing your contacts...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.setCancelable(false);
+        progressDialog.show();
 
         if(!hasPermissions(this, Permissions)){
 
             ActivityCompat.requestPermissions(this, Permissions, 1);
         }
         else {
+
+            if(!contacts.isEmpty()){
+                contacts.clear();
+            }
 
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -83,6 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
                 contactsAdapter.notifyDataSetChanged();
                 progressDialog.dismiss();
+                Log.e("size", contacts.size()+"");
             }
             return true;
         }
@@ -116,6 +126,11 @@ public class MainActivity extends AppCompatActivity {
                         }
                     });
                     thread.start();
+                }
+                else {
+
+                    progressDialog.dismiss();
+                    Toast.makeText(this, "Permission denied", Toast.LENGTH_SHORT).show();
                 }
         }
     }
